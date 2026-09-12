@@ -16,7 +16,6 @@ import com.minesword.browser.ui.tabs.TabModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class BrowserViewModel(application: Application) : AndroidViewModel(application) {
@@ -52,8 +51,7 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     val selectedSearchEngine: StateFlow<SearchEngine> = _selectedSearchEngine.asStateFlow()
 
     init {
-        // Initialize default tab
-        val tab = tabManager.addTab("https://www.google.com")
+        tabManager.addTab("https://www.google.com")
         refreshTabsState()
     }
 
@@ -76,6 +74,27 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         refreshTabsState()
     }
 
+    fun goBackInTab() {
+        tabManager.getActiveTab()?.goBack()?.let { prevUrl ->
+            _currentUrl.value = prevUrl
+            refreshTabsState()
+        }
+    }
+
+    fun goForwardInTab() {
+        tabManager.getActiveTab()?.goForward()?.let { nextUrl ->
+            _currentUrl.value = nextUrl
+            refreshTabsState()
+        }
+    }
+
+    fun refreshActiveTab() {
+        _selectedTab.value?.let {
+            _currentUrl.value = it.url
+            refreshTabsState()
+        }
+    }
+
     fun onPageStarted(url: String) {
         _currentUrl.value = url
         tabManager.updateActiveTabUrl(url)
@@ -89,7 +108,6 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         tabManager.updateActiveTabTitle(title)
         refreshTabsState()
 
-        // Persist history if not in Incognito mode
         if (!(_selectedTab.value?.isIncognito ?: false) && url != "about:blank") {
             viewModelScope.launch {
                 db.historyDao().insertHistory(

@@ -5,19 +5,18 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.minesword.browser.R
-import com.minesword.browser.data.local.entity.BookmarkEntity
-import com.minesword.browser.data.local.entity.HistoryEntity
 import com.minesword.browser.search.SearchEngine
 import com.minesword.browser.ui.viewmodel.BrowserViewModel
 
@@ -29,70 +28,68 @@ fun SettingsScreen(
 ) {
     val selectedEngine by viewModel.selectedSearchEngine.collectAsState()
 
+    val categories = listOf(
+        "General", "Appearance", "Search Engine", "Privacy", "Security",
+        "Permissions", "Downloads", "Passwords", "Languages", "Accessibility",
+        "Performance", "Offline", "Advanced", "About"
+    )
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(id = R.string.settings)) },
+                title = { Text(stringResource(id = R.string.settings), color = Color(0xFF00E5FF)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF121824))
             )
-        }
+        },
+        containerColor = Color(0xFF121824)
     ) { padding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp)
         ) {
-            Text(
-                text = "Search Engine",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            SearchEngine.values().forEach { engine ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { viewModel.setSearchEngine(engine) }
-                        .padding(vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RadioButton(
-                        selected = (engine == selectedEngine),
-                        onClick = { viewModel.setSearchEngine(engine) }
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = engine.displayName, fontSize = 16.sp)
+            item {
+                Text(
+                    text = "Search Engine",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF00E5FF)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                SearchEngine.values().forEach { engine ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { viewModel.setSearchEngine(engine) }
+                            .padding(vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = (engine == selectedEngine),
+                            onClick = { viewModel.setSearchEngine(engine) },
+                            colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00E5FF))
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = engine.displayName, fontSize = 16.sp, color = Color.White)
+                    }
                 }
+                HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp), color = Color.DarkGray)
             }
 
-            Divider(modifier = Modifier.padding(vertical = 16.dp))
-
-            Text(
-                text = stringResource(id = R.string.about_title),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Minesword Browser v1.0.0",
-                style = MaterialTheme.typography.bodyLarge
-            )
-            Text(
-                text = stringResource(id = R.string.about_description),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Developer: mineswordteam\nTeam: Minesword Team",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary
-            )
+            items(categories) { category ->
+                ListItem(
+                    headlineContent = { Text(category, color = Color.White, fontWeight = FontWeight.SemiBold) },
+                    supportingContent = { Text("Configure $category settings", color = Color.Gray, fontSize = 12.sp) },
+                    colors = ListItemDefaults.colors(containerColor = Color(0xFF1E2638))
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
         }
     }
 }
@@ -109,19 +106,21 @@ fun HistoryScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(id = R.string.history)) },
+                title = { Text(stringResource(id = R.string.history), color = Color(0xFF00E5FF)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
                 },
                 actions = {
                     IconButton(onClick = { viewModel.clearHistory() }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Clear History")
+                        Icon(Icons.Default.Delete, contentDescription = "Clear History", tint = Color.Red)
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF121824))
             )
-        }
+        },
+        containerColor = Color(0xFF121824)
     ) { padding ->
         if (historyList.isEmpty()) {
             Box(
@@ -130,7 +129,7 @@ fun HistoryScreen(
                     .padding(padding),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = "No history recorded yet.")
+                Text(text = "No history recorded yet.", color = Color.Gray)
             }
         } else {
             LazyColumn(
@@ -140,14 +139,15 @@ fun HistoryScreen(
             ) {
                 items(historyList) { item ->
                     ListItem(
-                        headlineContent = { Text(item.title, maxLines = 1) },
-                        supportingContent = { Text(item.url, maxLines = 1) },
+                        headlineContent = { Text(item.title, maxLines = 1, color = Color.White) },
+                        supportingContent = { Text(item.url, maxLines = 1, color = Color(0xFF00E5FF)) },
+                        colors = ListItemDefaults.colors(containerColor = Color(0xFF1E2638)),
                         modifier = Modifier.clickable {
                             onUrlSelected(item.url)
                             onBack()
                         }
                     )
-                    Divider()
+                    HorizontalDivider(color = Color.DarkGray)
                 }
             }
         }
@@ -166,14 +166,16 @@ fun BookmarksScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(id = R.string.bookmarks)) },
+                title = { Text(stringResource(id = R.string.bookmarks), color = Color(0xFF00E5FF)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF121824))
             )
-        }
+        },
+        containerColor = Color(0xFF121824)
     ) { padding ->
         if (bookmarksList.isEmpty()) {
             Box(
@@ -182,7 +184,7 @@ fun BookmarksScreen(
                     .padding(padding),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = "No bookmarks added yet.")
+                Text(text = "No bookmarks added yet.", color = Color.Gray)
             }
         } else {
             LazyColumn(
@@ -192,14 +194,15 @@ fun BookmarksScreen(
             ) {
                 items(bookmarksList) { bookmark ->
                     ListItem(
-                        headlineContent = { Text(bookmark.title, maxLines = 1) },
-                        supportingContent = { Text(bookmark.url, maxLines = 1) },
+                        headlineContent = { Text(bookmark.title, maxLines = 1, color = Color.White) },
+                        supportingContent = { Text(bookmark.url, maxLines = 1, color = Color(0xFF00E5FF)) },
+                        colors = ListItemDefaults.colors(containerColor = Color(0xFF1E2638)),
                         modifier = Modifier.clickable {
                             onUrlSelected(bookmark.url)
                             onBack()
                         }
                     )
-                    Divider()
+                    HorizontalDivider(color = Color.DarkGray)
                 }
             }
         }

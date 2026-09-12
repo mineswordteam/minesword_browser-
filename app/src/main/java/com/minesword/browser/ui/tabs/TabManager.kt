@@ -2,6 +2,7 @@ package com.minesword.browser.ui.tabs
 
 import android.graphics.Bitmap
 import android.webkit.WebView
+import java.util.ArrayDeque
 import java.util.UUID
 
 data class TabModel(
@@ -11,10 +12,42 @@ data class TabModel(
     var favicon: Bitmap? = null,
     val isIncognito: Boolean = false,
     var progress: Int = 0,
-    var webView: WebView? = null,
-    var canGoBack: Boolean = false,
-    var canGoForward: Boolean = false
-)
+    var webView: WebView? = null
+) {
+    val backStack = ArrayDeque<String>()
+    val forwardStack = ArrayDeque<String>()
+
+    val canGoBack: Boolean get() = backStack.isNotEmpty()
+    val canGoForward: Boolean get() = forwardStack.isNotEmpty()
+
+    fun navigateTo(newUrl: String) {
+        if (url.isNotEmpty() && url != newUrl && url != "about:blank") {
+            backStack.push(url)
+        }
+        forwardStack.clear()
+        url = newUrl
+    }
+
+    fun goBack(): String? {
+        if (canGoBack) {
+            forwardStack.push(url)
+            val prevUrl = backStack.pop()
+            url = prevUrl
+            return prevUrl
+        }
+        return null
+    }
+
+    fun goForward(): String? {
+        if (canGoForward) {
+            backStack.push(url)
+            val nextUrl = forwardStack.pop()
+            url = nextUrl
+            return nextUrl
+        }
+        return null
+    }
+}
 
 class TabManager {
     private val tabsList = mutableListOf<TabModel>()
@@ -63,7 +96,7 @@ class TabManager {
 
     fun updateActiveTabUrl(url: String) {
         getActiveTab()?.let {
-            it.url = url
+            it.navigateTo(url)
         }
     }
 

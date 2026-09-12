@@ -5,24 +5,26 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import com.minesword.browser.engine.minesword.MineswordCanvasView
+import com.minesword.browser.engine.minesword.MineswordEngineHost
 import com.minesword.browser.network.NetworkStatus
 import com.minesword.browser.ui.components.*
 import com.minesword.browser.ui.theme.MineswordBrowserTheme
 import com.minesword.browser.ui.viewmodel.BrowserViewModel
 
 enum class ScreenState {
+    HOME,
     BROWSER,
     TABS,
     SETTINGS,
@@ -33,6 +35,7 @@ enum class ScreenState {
 class MainActivity : ComponentActivity() {
 
     private val viewModel: BrowserViewModel by viewModels()
+    private val engineHost = MineswordEngineHost()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,71 +46,66 @@ class MainActivity : ComponentActivity() {
             MineswordBrowserTheme {
                 val currentUrl by viewModel.currentUrl.collectAsState()
                 val currentTitle by viewModel.currentTitle.collectAsState()
-                val loadingProgress by viewModel.loadingProgress.collectAsState()
                 val tabs by viewModel.tabs.collectAsState()
                 val selectedTab by viewModel.selectedTab.collectAsState()
                 val isIncognito by viewModel.isIncognitoMode.collectAsState()
                 val networkStatus by viewModel.networkMonitor.networkStatus.collectAsState()
 
-                var currentScreen by remember { mutableStateOf(ScreenState.BROWSER) }
+                var currentScreen by remember { mutableStateOf(ScreenState.HOME) }
                 var showMenu by remember { mutableStateOf(false) }
 
                 Scaffold(
                     topBar = {
-                        Column {
-                            // Address Bar
-                            AddressBar(
-                                url = currentUrl,
-                                onUrlSubmitted = { input ->
-                                    viewModel.submitQueryOrUrl(input)
-                                },
-                                isIncognito = isIncognito,
-                                onTabsClicked = { currentScreen = ScreenState.TABS },
-                                tabCount = tabs.size,
-                                onMenuClicked = { showMenu = true }
-                            )
-
-                            // Loading Progress Bar
-                            if (loadingProgress in 1..99) {
-                                LinearProgressIndicator(
-                                    progress = { loadingProgress / 100f },
-                                    modifier = Modifier.fillMaxWidth().height(3.dp),
-                                    color = MaterialTheme.colorScheme.primary
+                        if (currentScreen != ScreenState.HOME) {
+                            Column {
+                                FuturisticAddressBar(
+                                    url = currentUrl,
+                                    onUrlSubmitted = { input ->
+                                        viewModel.submitQueryOrUrl(input)
+                                        currentScreen = ScreenState.BROWSER
+                                    },
+                                    isIncognito = isIncognito,
+                                    onTabsClicked = { currentScreen = ScreenState.TABS },
+                                    tabCount = tabs.size,
+                                    onMenuClicked = { showMenu = true }
                                 )
-                            }
 
-                            // Network Status Alert Banner
-                            if (networkStatus != NetworkStatus.ONLINE) {
-                                Surface(
-                                    color = if (networkStatus == NetworkStatus.OFFLINE) Color(0xFFD32F2F) else Color(0xFFF57C00),
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text(
-                                        text = if (networkStatus == NetworkStatus.OFFLINE)
-                                            stringResource(R.string.offline_message)
-                                        else
-                                            stringResource(R.string.local_network_message),
-                                        color = Color.White,
-                                        fontSize = 12.sp,
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
-                                    )
+                                if (networkStatus != NetworkStatus.ONLINE) {
+                                    Surface(
+                                        color = if (networkStatus == NetworkStatus.OFFLINE) Color(0xFFD32F2F) else Color(0xFFF57C00),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text(
+                                            text = if (networkStatus == NetworkStatus.OFFLINE)
+                                                stringResource(R.string.offline_message)
+                                            else
+                                                stringResource(R.string.local_network_message),
+                                            color = Color.White,
+                                            fontSize = 12.sp,
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                                        )
+                                    }
                                 }
                             }
                         }
                     },
                     bottomBar = {
-                        if (currentScreen == ScreenState.BROWSER) {
-                            BottomNavigationBar(
+                        if (currentScreen == ScreenState.BROWSER || currentScreen == ScreenState.HOME) {
+                            FuturisticBottomNav(
                                 canGoBack = selectedTab?.canGoBack ?: false,
                                 canGoForward = selectedTab?.canGoForward ?: false,
-                                onBack = { selectedTab?.webView?.goBack() },
-                                onForward = { selectedTab?.webView?.goForward() },
-                                onHome = { viewModel.submitQueryOrUrl("https://www.google.com") },
-                                onRefresh = { selectedTab?.webView?.reload() },
-                                onAddTab = { viewModel.addNewTab("https://www.google.com", false) }
+                                onBack = { viewModel.goBackInTab() },
+                                onForward = { viewModel.goForwardInTab() },
+                                onHome = { currentScreen = ScreenState.HOME },
+                                onRefresh = { viewModel.refreshActiveTab() },
+                                onAddTab = {
+                                    viewModel.addNewTab("https://www.google.com", false)
+                                    currentScreen = ScreenState.BROWSER
+                                }
                             )
                         }
-                    }
+                    },
+                    containerColor = Color(0xFF121824)
                 ) { padding ->
                     Box(
                         modifier = Modifier
@@ -115,21 +113,51 @@ class MainActivity : ComponentActivity() {
                             .padding(padding)
                     ) {
                         when (currentScreen) {
+                            ScreenState.HOME -> {
+                                MineswordHomeScreen(
+                                    onSearchSubmitted = { query ->
+                                        viewModel.submitQueryOrUrl(query)
+                                        currentScreen = ScreenState.BROWSER
+                                    }
+                                )
+                            }
                             ScreenState.BROWSER -> {
-                                selectedTab?.let { tab ->
-                                    BrowserWebView(
-                                        tab = tab,
-                                        viewModel = viewModel
-                                    )
+                                var loadedHtmlBody by remember { mutableStateOf("") }
+
+                                LaunchedEffect(currentUrl) {
+                                    val response = engineHost.loadPage(currentUrl)
+                                    loadedHtmlBody = response.body
                                 }
+
+                                AndroidView(
+                                    modifier = Modifier.fillMaxSize(),
+                                    factory = { ctx ->
+                                        MineswordCanvasView(ctx).also { view ->
+                                            view.onLinkClicked = { clickedUrl ->
+                                                viewModel.submitQueryOrUrl(clickedUrl)
+                                            }
+                                        }
+                                    },
+                                    update = { view ->
+                                        if (loadedHtmlBody.isNotEmpty()) {
+                                            view.loadHtmlContent(loadedHtmlBody, pageUrl = currentUrl)
+                                        }
+                                    }
+                                )
                             }
                             ScreenState.TABS -> {
-                                TabGridOverlay(
+                                FuturisticTabSwitcher(
                                     tabs = tabs,
                                     selectedTabId = selectedTab?.id,
-                                    onSelectTab = { id -> viewModel.selectTab(id) },
+                                    onSelectTab = { id ->
+                                        viewModel.selectTab(id)
+                                        currentScreen = ScreenState.BROWSER
+                                    },
                                     onCloseTab = { id -> viewModel.closeTab(id) },
-                                    onNewTab = { incognito -> viewModel.addNewTab(isIncognito = incognito) },
+                                    onNewTab = { incognito ->
+                                        viewModel.addNewTab(isIncognito = incognito)
+                                        currentScreen = ScreenState.BROWSER
+                                    },
                                     onDismiss = { currentScreen = ScreenState.BROWSER }
                                 )
                             }
@@ -142,20 +170,25 @@ class MainActivity : ComponentActivity() {
                             ScreenState.HISTORY -> {
                                 HistoryScreen(
                                     viewModel = viewModel,
-                                    onUrlSelected = { url -> viewModel.submitQueryOrUrl(url) },
+                                    onUrlSelected = { url ->
+                                        viewModel.submitQueryOrUrl(url)
+                                        currentScreen = ScreenState.BROWSER
+                                    },
                                     onBack = { currentScreen = ScreenState.BROWSER }
                                 )
                             }
                             ScreenState.BOOKMARKS -> {
                                 BookmarksScreen(
                                     viewModel = viewModel,
-                                    onUrlSelected = { url -> viewModel.submitQueryOrUrl(url) },
+                                    onUrlSelected = { url ->
+                                        viewModel.submitQueryOrUrl(url)
+                                        currentScreen = ScreenState.BROWSER
+                                    },
                                     onBack = { currentScreen = ScreenState.BROWSER }
                                 )
                             }
                         }
 
-                        // Overflow Menu Dropdown
                         DropdownMenu(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false }
@@ -164,6 +197,7 @@ class MainActivity : ComponentActivity() {
                                 text = { Text(stringResource(R.string.new_tab)) },
                                 onClick = {
                                     viewModel.addNewTab("https://www.google.com", false)
+                                    currentScreen = ScreenState.BROWSER
                                     showMenu = false
                                 },
                                 leadingIcon = { Icon(Icons.Default.Add, contentDescription = null) }
@@ -172,11 +206,12 @@ class MainActivity : ComponentActivity() {
                                 text = { Text(stringResource(R.string.incognito_tab)) },
                                 onClick = {
                                     viewModel.addNewTab("https://www.google.com", true)
+                                    currentScreen = ScreenState.BROWSER
                                     showMenu = false
                                 },
                                 leadingIcon = { Icon(Icons.Default.VisibilityOff, contentDescription = null) }
                             )
-                            Divider()
+                            HorizontalDivider()
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.add_bookmark)) },
                                 onClick = {
@@ -201,7 +236,7 @@ class MainActivity : ComponentActivity() {
                                 },
                                 leadingIcon = { Icon(Icons.Default.History, contentDescription = null) }
                             )
-                            Divider()
+                            HorizontalDivider()
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.settings)) },
                                 onClick = {

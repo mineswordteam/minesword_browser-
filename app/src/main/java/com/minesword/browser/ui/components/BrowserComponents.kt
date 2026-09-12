@@ -1,11 +1,10 @@
 package com.minesword.browser.ui.components
 
-import android.annotation.SuppressLint
-import android.content.Context
-import android.graphics.Bitmap
-import android.webkit.DownloadListener
-import android.webkit.WebView
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,43 +12,35 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import com.minesword.browser.R
-import com.minesword.browser.data.local.entity.BookmarkEntity
-import com.minesword.browser.data.local.entity.DownloadEntity
-import com.minesword.browser.data.local.entity.HistoryEntity
-import com.minesword.browser.engine.MineswordWebChromeClient
-import com.minesword.browser.engine.MineswordWebViewClient
-import com.minesword.browser.network.NetworkStatus
-import com.minesword.browser.search.SearchEngine
 import com.minesword.browser.security.SecurityManager
 import com.minesword.browser.ui.tabs.TabModel
-import com.minesword.browser.ui.viewmodel.BrowserViewModel
 
 @Composable
-fun AddressBar(
+fun FuturisticAddressBar(
     url: String,
     onUrlSubmitted: (String) -> Unit,
     isIncognito: Boolean,
@@ -60,25 +51,39 @@ fun AddressBar(
     var text by remember(url) { mutableStateOf(url) }
     val isSecure = SecurityManager.isSecureUrl(url)
 
+    val gradientBrush = Brush.horizontalGradient(
+        colors = listOf(
+            Color(0xFF00E5FF).copy(alpha = 0.15f),
+            Color(0xFF00B0FF).copy(alpha = 0.08f)
+        )
+    )
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 4.dp),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        tonalElevation = 4.dp
+            .padding(horizontal = 10.dp, vertical = 6.dp)
+            .border(
+                width = 1.dp,
+                brush = Brush.horizontalGradient(
+                    colors = if (isIncognito) listOf(Color.Magenta, Color(0xFF7B1FA2)) else listOf(Color(0xFF00E5FF), Color(0xFF00838F))
+                ),
+                shape = RoundedCornerShape(28.dp)
+            ),
+        shape = RoundedCornerShape(28.dp),
+        color = Color(0xFF1E2638)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 4.dp),
+                .background(gradientBrush)
+                .padding(horizontal = 14.dp, vertical = 2.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = if (isIncognito) Icons.Default.VisibilityOff else if (isSecure) Icons.Default.Lock else Icons.Default.LockOpen,
                 contentDescription = "Security Status",
-                tint = if (isIncognito) Color.Magenta else if (isSecure) Color(0xFF4CAF50) else Color.Gray,
-                modifier = Modifier.size(20.dp)
+                tint = if (isIncognito) Color.Magenta else if (isSecure) Color(0xFF00E5FF) else Color(0xFFFFB74D),
+                modifier = Modifier.size(22.dp)
             )
 
             Spacer(modifier = Modifier.width(8.dp))
@@ -90,7 +95,8 @@ fun AddressBar(
                 placeholder = {
                     Text(
                         text = stringResource(id = R.string.search_hint),
-                        fontSize = 14.sp,
+                        fontSize = 13.sp,
+                        color = Color.Gray,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -100,7 +106,9 @@ fun AddressBar(
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
                     focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
+                    unfocusedIndicatorColor = Color.Transparent,
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White
                 ),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
                 keyboardActions = KeyboardActions(onGo = { onUrlSubmitted(text) })
@@ -108,29 +116,33 @@ fun AddressBar(
 
             Box(
                 modifier = Modifier
-                    .size(28.dp)
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(MaterialTheme.colorScheme.primary)
+                    .size(30.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(
+                        Brush.linearGradient(
+                            listOf(Color(0xFF00E5FF), Color(0xFF00838F))
+                        )
+                    )
                     .clickable { onTabsClicked() },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = tabCount.toString(),
-                    color = MaterialTheme.colorScheme.onPrimary,
+                    color = Color.Black,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp
+                    fontSize = 13.sp
                 )
             }
 
             IconButton(onClick = onMenuClicked) {
-                Icon(Icons.Default.MoreVert, contentDescription = "Menu")
+                Icon(Icons.Default.MoreVert, contentDescription = "Menu", tint = Color.White)
             }
         }
     }
 }
 
 @Composable
-fun BottomNavigationBar(
+fun FuturisticBottomNav(
     canGoBack: Boolean,
     canGoForward: Boolean,
     onBack: () -> Unit,
@@ -141,99 +153,117 @@ fun BottomNavigationBar(
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 8.dp
+        color = Color(0xFF121824),
+        tonalElevation = 12.dp
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 4.dp),
+                .padding(vertical = 6.dp),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBack, enabled = canGoBack) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = if (canGoBack) Color(0xFF00E5FF) else Color.DarkGray)
             }
             IconButton(onClick = onForward, enabled = canGoForward) {
-                Icon(Icons.Default.ArrowForward, contentDescription = "Forward")
+                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Forward", tint = if (canGoForward) Color(0xFF00E5FF) else Color.DarkGray)
             }
-            IconButton(onClick = onHome) {
-                Icon(Icons.Default.Home, contentDescription = "Home")
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(CircleShape)
+                    .background(Brush.linearGradient(listOf(Color(0xFF00E5FF), Color(0xFF00838F))))
+                    .clickable { onHome() },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Default.Home, contentDescription = "Home", tint = Color.Black)
             }
             IconButton(onClick = onAddTab) {
-                Icon(Icons.Default.Add, contentDescription = "New Tab")
+                Icon(Icons.Default.Add, contentDescription = "New Tab", tint = Color(0xFF00E5FF))
             }
             IconButton(onClick = onRefresh) {
-                Icon(Icons.Default.Refresh, contentDescription = "Refresh")
+                Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = Color(0xFF00E5FF))
             }
         }
     }
 }
 
-@SuppressLint("SetJavaScriptEnabled")
 @Composable
-fun BrowserWebView(
-    tab: TabModel,
-    viewModel: BrowserViewModel,
-    modifier: Modifier = Modifier
+fun MineswordHomeScreen(
+    onSearchSubmitted: (String) -> Unit
 ) {
-    val context = LocalContext.current
-    val currentNetworkStatus by viewModel.networkMonitor.networkStatus.collectAsState()
+    var query by remember { mutableStateOf("") }
 
-    AndroidView(
-        modifier = modifier.fillMaxSize(),
-        factory = { ctx ->
-            WebView(ctx).apply {
-                SecurityManager.configureWebSettings(ctx, this, tab.isIncognito)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF121824))
+            .padding(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.ic_minesword_logo),
+            contentDescription = "Minesword Logo",
+            modifier = Modifier.size(100.dp)
+        )
 
-                webViewClient = MineswordWebViewClient(
-                    onPageStartedCallback = { url, _ ->
-                        viewModel.onPageStarted(url)
-                    },
-                    onPageFinishedCallback = { url ->
-                        viewModel.onPageFinished(url, title ?: url)
-                        tab.canGoBack = canGoBack()
-                        tab.canGoForward = canGoForward()
-                    },
-                    onErrorReceivedCallback = { code, desc, failingUrl ->
-                        // Load custom offline or error page
-                    },
-                    getNetworkStatus = { viewModel.networkMonitor.getCurrentStatus() }
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "MINESWORD BROWSER",
+            color = Color(0xFF00E5FF),
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 2.sp
+        )
+
+        Text(
+            text = "mineswordteam",
+            color = Color.Gray,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(1.dp, Color(0xFF00E5FF), RoundedCornerShape(24.dp)),
+            shape = RoundedCornerShape(24.dp),
+            color = Color(0xFF1E2638)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Default.Search, contentDescription = "Search", tint = Color(0xFF00E5FF))
+                Spacer(modifier = Modifier.width(8.dp))
+                TextField(
+                    value = query,
+                    onValueChange = { query = it },
+                    modifier = Modifier.weight(1f),
+                    placeholder = { Text("Search or enter web address...", color = Color.Gray) },
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedTextColor = Color.White
+                    ),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
+                    keyboardActions = KeyboardActions(onGo = { onSearchSubmitted(query) })
                 )
-
-                webChromeClient = MineswordWebChromeClient(
-                    onProgressChangedCallback = { progress ->
-                        viewModel.onProgressChanged(progress)
-                    },
-                    onTitleReceivedCallback = { title ->
-                        viewModel.onPageFinished(url ?: "", title)
-                    },
-                    onFaviconReceivedCallback = { bitmap ->
-                        tab.favicon = bitmap
-                    },
-                    onPermissionRequestedCallback = { request ->
-                        request.grant(request.resources)
-                    }
-                )
-
-                setDownloadListener { url, userAgent, contentDisposition, mimetype, _ ->
-                    viewModel.downloadManager.startDownload(url, userAgent, contentDisposition, mimetype)
-                }
-
-                tab.webView = this
-                loadUrl(tab.url)
-            }
-        },
-        update = { webView ->
-            if (webView.url != tab.url && tab.url != "about:blank") {
-                webView.loadUrl(tab.url)
             }
         }
-    )
+    }
 }
 
 @Composable
-fun TabGridOverlay(
+fun FuturisticTabSwitcher(
     tabs: List<TabModel>,
     selectedTabId: String?,
     onSelectTab: (String) -> Unit,
@@ -243,7 +273,7 @@ fun TabGridOverlay(
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = Color(0xFF121824)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -254,18 +284,22 @@ fun TabGridOverlay(
                 Text(
                     text = stringResource(id = R.string.tabs),
                     style = MaterialTheme.typography.headlineMedium,
+                    color = Color(0xFF00E5FF),
                     fontWeight = FontWeight.Bold
                 )
 
                 Row {
-                    Button(onClick = { onNewTab(false) }) {
+                    Button(
+                        onClick = { onNewTab(false) },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF), contentColor = Color.Black)
+                    ) {
                         Icon(Icons.Default.Add, contentDescription = null)
                         Spacer(Modifier.width(4.dp))
                         Text(stringResource(R.string.new_tab))
                     }
                     Spacer(Modifier.width(8.dp))
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = "Close Tabs")
+                        Icon(Icons.Default.Close, contentDescription = "Close Tabs", tint = Color.White)
                     }
                 }
             }
@@ -281,20 +315,23 @@ fun TabGridOverlay(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(140.dp)
+                            .height(150.dp)
+                            .border(
+                                1.dp,
+                                if (tab.id == selectedTabId) Color(0xFF00E5FF) else Color.Transparent,
+                                RoundedCornerShape(14.dp)
+                            )
                             .clickable {
                                 onSelectTab(tab.id)
                                 onDismiss()
                             },
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (tab.id == selectedTabId) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
-                        )
+                        shape = RoundedCornerShape(14.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2638))
                     ) {
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(8.dp),
+                                .padding(10.dp),
                             verticalArrangement = Arrangement.SpaceBetween
                         ) {
                             Row(
@@ -308,13 +345,14 @@ fun TabGridOverlay(
                                     overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.weight(1f),
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp
+                                    color = Color.White,
+                                    fontSize = 13.sp
                                 )
                                 IconButton(
                                     onClick = { onCloseTab(tab.id) },
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(22.dp)
                                 ) {
-                                    Icon(Icons.Default.Close, contentDescription = "Close Tab", modifier = Modifier.size(16.dp))
+                                    Icon(Icons.Default.Close, contentDescription = "Close Tab", tint = Color.Gray, modifier = Modifier.size(16.dp))
                                 }
                             }
                             Text(
@@ -322,7 +360,7 @@ fun TabGridOverlay(
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis,
                                 fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = Color(0xFF00E5FF)
                             )
                         }
                     }
