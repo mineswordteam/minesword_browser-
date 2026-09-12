@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">مرورگر ماین‌سورد</string>
+    <string name="developer_name">mineswordteam</string>
+    <string name="team_name">تیم ماین‌سورد</string>
+    <string name="search_hint">جستجو یا وارد کردن آدرس وب...</string>
+    <string name="new_tab">برگه جدید</string>
+    <string name="incognito_tab">برگه ناشناس</string>
+    <string name="tabs">برگه‌ها</string>
+    <string name="bookmarks">نشانه‌ها</string>
+    <string name="history">تاریخچه</string>
+    <string name="downloads">دانلودها</string>
+    <string name="settings">تنظیمات</string>
+    <string name="clear_history">پاک‌سازی تاریخچه</string>
+    <string name="add_bookmark">افزودن نشانه</string>
+    <string name="remove_bookmark">حذف نشانه</string>
+    <string name="share">اشتراک‌گذاری</string>
+    <string name="find_in_page">یافتن در صفحه</string>
+    <string name="desktop_site">سایت دسکتاپ</string>
+    <string name="offline_message">شما آفلاین هستید. شبکه اینترنت در دسترس نیست.</string>
+    <string name="local_network_message">شبکه محلی (LAN) متصل است اما اینترنت قطع می‌باشد.</string>
+    <string name="secure_connection">ارتباط امن (HTTPS)</string>
+    <string name="insecure_connection">ارتباط غیرامن (HTTP)</string>
+    <string name="about_title">درباره مرورگر ماین‌سورد</string>
+    <string name="about_description">مرورگر ماین‌سورد توسط تیم ماین‌سورد توسعه یافته است.</string>
+</resources>
