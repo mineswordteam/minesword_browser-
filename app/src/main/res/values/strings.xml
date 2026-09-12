@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Minesword Browser</string>
+    <string name="developer_name">mineswordteam</string>
+    <string name="team_name">Minesword Team</string>
+    <string name="search_hint">Search or enter web address...</string>
+    <string name="new_tab">New Tab</string>
+    <string name="incognito_tab">Incognito Tab</string>
+    <string name="tabs">Tabs</string>
+    <string name="bookmarks">Bookmarks</string>
+    <string name="history">History</string>
+    <string name="downloads">Downloads</string>
+    <string name="settings">Settings</string>
+    <string name="clear_history">Clear History</string>
+    <string name="add_bookmark">Add Bookmark</string>
+    <string name="remove_bookmark">Remove Bookmark</string>
+    <string name="share">Share</string>
+    <string name="find_in_page">Find in page</string>
+    <string name="desktop_site">Desktop site</string>
+    <string name="offline_message">You are offline. No internet connection detected.</string>
+    <string name="local_network_message">Local network (LAN) connected, but no Internet access.</string>
+    <string name="secure_connection">Secure Connection (HTTPS)</string>
+    <string name="insecure_connection">Insecure Connection (HTTP)</string>
+    <string name="about_title">About Minesword Browser</string>
+    <string name="about_description">Minesword Browser is developed by Minesword Team (mineswordteam).</string>
+</resources>
