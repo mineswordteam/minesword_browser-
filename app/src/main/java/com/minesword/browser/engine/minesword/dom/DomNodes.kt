@@ -14,6 +14,18 @@ open class Node(val nodeName: String) {
             child.parentNode = null
         }
     }
+
+    open fun textContent(): String {
+        val sb = StringBuilder()
+        for (child in childNodes) {
+            if (child is TextNode) {
+                sb.append(child.text)
+            } else if (child is Element) {
+                sb.append(child.textContent())
+            }
+        }
+        return sb.toString()
+    }
 }
 
 class Document : Node("#document") {
@@ -42,7 +54,7 @@ class Element(val tagName: String) : Node(tagName.uppercase()) {
         attributes[name] = value
     }
 
-    fun textContent(): String {
+    override fun textContent(): String {
         val sb = StringBuilder()
         for (child in childNodes) {
             if (child is TextNode) {
@@ -55,6 +67,10 @@ class Element(val tagName: String) : Node(tagName.uppercase()) {
     }
 }
 
-class TextNode(var text: String) : Node("#text")
+class TextNode(var text: String) : Node("#text") {
+    override fun textContent(): String = text
+}
 
-class CommentNode(val text: String) : Node("#comment")
+class CommentNode(val text: String) : Node("#comment") {
+    override fun textContent(): String = ""
+}

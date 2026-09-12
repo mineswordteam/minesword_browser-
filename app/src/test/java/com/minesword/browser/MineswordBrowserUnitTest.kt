@@ -16,8 +16,8 @@ import org.junit.Test
 class MineswordBrowserUnitTest {
 
     @Test
-    fun testHtmlParser_buildsDomTreeCorrectly() {
-        val html = "<html><body><h1 id='title'>سلام جهان</h1><p class='desc'>مرورگر ماین‌سورد</p></body></html>"
+    fun testHtmlParser_buildsDomTreeCorrectlyWithDoctypeAndScripts() {
+        val html = "<!DOCTYPE html><html><head><script>if (a < b) { doSomething(); }</script></head><body><h1 id='title'>سلام جهان</h1><p class='desc'>مرورگر ماین‌سورد</p></body></html>"
         val parser = HtmlParser(html)
         val document = parser.parse()
 
@@ -36,7 +36,7 @@ class MineswordBrowserUnitTest {
 
         assertEquals(2, cssSheet.rules.size)
 
-        val html = "<html><body><h1>Minesword Engine</h1></body></html>"
+        val html = "<!DOCTYPE html><html><body><h1>Minesword Engine</h1></body></html>"
         val doc = HtmlParser(html).parse()
 
         val layoutEngine = LayoutEngine()

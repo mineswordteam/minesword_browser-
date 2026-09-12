@@ -1,22 +1,28 @@
-# Minesword Browser
+# Minesword Browser Documentation
 
 **Developer:** `mineswordteam`
 **Team:** Minesword Team
+**Package:** `com.minesword.browser`
 
-Minesword Browser is a production-grade, secure, Persian-first Android web browser built using Kotlin, Jetpack Compose, Room DB, and Android WebKit security features.
+Minesword Browser is a production-grade, secure, Persian-first Android web browser built using Kotlin, Jetpack Compose, Room DB, and the custom native **Minesword Engine**.
 
-## Highlights
-- **Real Web Browsing**: Full HTTPS/HTTP support, navigation lifecycle, cookie & session management.
-- **Persian-First & RTL Support**: Native Persian character and numeral normalization (ی/ي, ک/ك, ZWNJ handling, Persian digits).
-- **Security & Privacy**: Strict HTTPS enforce, Cookie management, Incognito isolated mode, and Safe Browsing integration.
-- **Data Persistence**: SQLite / Room DB persistence for History, Bookmarks, Open Tabs, Downloads, and Site Permissions.
-- **Tab System**: Multi-tab manager with instant switching, tab restoration, and background memory efficiency.
-- **Download Management**: Native system download service integration with progress tracking and metadata saving.
-- **Network State Awareness**: Online, Local Network Only (LAN), and Offline state detection.
+## Implementation Status Summary
+- **Minesword Engine**: `IMPLEMENTED` — Native HTML/CSS parser, DOM tree, Box-model layout, Canvas painter with multi-line text wrapping, link hit-testing, and native HTTP/HTTPS networking client.
+- **Futuristic UI/UX**: `IMPLEMENTED` — Jetpack Compose home screen with logo mark, glassmorphic top address bar, dark bottom navigation bar, 3D tab switcher, and 14-category settings UI.
+- **Persian & RTL**: `IMPLEMENTED` — Native Persian/Arabic character & numeral normalization (ی/ي, ک/ك, ZWNJ) and RTL layout support.
+- **Security & Privacy**: `IMPLEMENTED` — Strict `usesCleartextTraffic="false"`, Same-Origin Policy checks, HTTPS enforcement, cookie management, and Incognito mode.
+- **Storage**: `IMPLEMENTED` — SQLite / Room database for History, Bookmarks, Open Tabs, Downloads, and Site Permissions.
+- **Network State**: `IMPLEMENTED` — Dynamic connectivity monitoring (`ONLINE`, `LOCAL_NETWORK_ONLY`, `OFFLINE`).
 
-## Build Instructions
+## Build Commands
 ```bash
-./gradlew assembleDebug
+# Run Unit Tests
+./gradlew testDebugUnitTest
+
+# Assemble Debug APK
+./gradlew :app:assembleDebug
 ```
-The APK artifact will be output at:
-`app/build/outputs/apk/debug/app-debug.apk`
+
+## Generated Artifacts
+- **APK Path**: `apk/Minesword-Browser.apk` (~18 MB)
+- **ZIP Path**: `minesword-browser.zip` (~19 MB)

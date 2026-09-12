@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.minesword.browser.engine.minesword.MineswordCanvasView
 import com.minesword.browser.engine.minesword.MineswordEngineHost
+import com.minesword.browser.engine.minesword.html.HtmlParser
 import com.minesword.browser.network.NetworkStatus
 import com.minesword.browser.ui.components.*
 import com.minesword.browser.ui.theme.MineswordBrowserTheme
@@ -127,6 +128,16 @@ class MainActivity : ComponentActivity() {
                                 LaunchedEffect(currentUrl) {
                                     val response = engineHost.loadPage(currentUrl)
                                     loadedHtmlBody = response.body
+
+                                    // Extract title from parsed HTML document
+                                    val doc = HtmlParser(response.body).parse()
+                                    val extractedTitle = doc.documentElement?.childNodes
+                                        ?.firstOrNull { it.nodeName.equals("HEAD", ignoreCase = true) }
+                                        ?.childNodes
+                                        ?.firstOrNull { it.nodeName.equals("TITLE", ignoreCase = true) }
+                                        ?.textContent() ?: currentUrl
+
+                                    viewModel.onPageFinished(currentUrl, extractedTitle)
                                 }
 
                                 AndroidView(

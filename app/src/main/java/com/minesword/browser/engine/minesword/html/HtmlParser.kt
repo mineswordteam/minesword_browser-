@@ -17,24 +17,51 @@ sealed class HtmlToken {
 class HtmlLexer(private val input: String) {
     private var pos = 0
     private val length = input.length
+    private var lastStartTag: String? = null
 
     fun nextToken(): HtmlToken {
         if (pos >= length) return HtmlToken.EOF
 
+        // Handle raw text inside <script> and <style> tags
+        if (lastStartTag == "script" || lastStartTag == "style") {
+            val endTag = "</$lastStartTag>"
+            val endTagIdx = input.indexOf(endTag, pos, ignoreCase = true)
+            if (endTagIdx != -1) {
+                if (endTagIdx > pos) {
+                    val rawText = input.substring(pos, endTagIdx)
+                    pos = endTagIdx
+                    return HtmlToken.CharacterToken(rawText)
+                }
+            }
+        }
+
         val ch = input[pos]
         if (ch == '<') {
-            if (pos + 1 < length && input[pos + 1] == '!') {
-                // Comment token
-                pos += 2
+            if (pos + 3 < length && input.startsWith("<!--", pos)) {
+                // Comment token <!-- ... -->
+                pos += 4
                 val start = pos
-                while (pos < length && !input.startsWith("-->", pos)) {
-                    pos++
+                val endIdx = input.indexOf("-->", pos)
+                if (endIdx != -1) {
+                    val commentText = input.substring(start, endIdx)
+                    pos = endIdx + 3
+                    return HtmlToken.CommentToken(commentText)
+                } else {
+                    val commentText = input.substring(start)
+                    pos = length
+                    return HtmlToken.CommentToken(commentText)
                 }
-                val commentText = input.substring(start, pos)
-                if (pos < length) pos += 3
-                return HtmlToken.CommentToken(commentText)
+            } else if (pos + 1 < length && input[pos + 1] == '!') {
+                // DOCTYPE or other declaration <!DOCTYPE ...>
+                val endIdx = input.indexOf('>', pos)
+                if (endIdx != -1) {
+                    pos = endIdx + 1
+                } else {
+                    pos = length
+                }
+                return nextToken()
             } else if (pos + 1 < length && input[pos + 1] == '/') {
-                // End tag
+                // End tag </tag>
                 pos += 2
                 val start = pos
                 while (pos < length && input[pos] != '>') {
@@ -42,9 +69,12 @@ class HtmlLexer(private val input: String) {
                 }
                 val tagName = input.substring(start, pos).trim().lowercase()
                 if (pos < length) pos++ // Skip '>'
+                if (tagName == lastStartTag) {
+                    lastStartTag = null
+                }
                 return HtmlToken.EndTag(tagName)
             } else {
-                // Start tag
+                // Start tag <tag ...>
                 pos++
                 val start = pos
                 while (pos < length && input[pos] != '>' && !input[pos].isWhitespace()) {
@@ -96,6 +126,8 @@ class HtmlLexer(private val input: String) {
                 val autoSelfClosingTags = setOf("img", "input", "br", "hr", "meta", "link")
                 if (autoSelfClosingTags.contains(tagName)) {
                     isSelfClosing = true
+                } else if (!isSelfClosing) {
+                    lastStartTag = tagName
                 }
 
                 return HtmlToken.StartTag(tagName, attributes, isSelfClosing)
